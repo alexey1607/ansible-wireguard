@@ -1,0 +1,13 @@
+
+{% for key, value in wireguard_peers.items() %}
+###############################################
+
+# {{ value.friendly_name }}
+[Interface]
+PrivateKey = You_Private_Key
+Address = {{ value.Address }}
+[Peer]
+PublicKey = {{ __wireguard_public_key['content'] | b64decode }}
+AllowedIPs = {{ value.AllowedIPs }}
+Endpoint = {{ ansible_host }}:51820
+{% endfor %}

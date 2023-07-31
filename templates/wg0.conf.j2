@@ -1,0 +1,17 @@
+{{ ansible_managed | comment }}
+
+[Interface]
+Address = {{ wireguard_address }}
+PrivateKey = {{ __wireguard_private_key['content'] | b64decode }}
+ListenPort = {{ wireguard_port }}
+
+PostUp = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o ens3 -j MASQUERADE
+PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o ens3 -j MASQUERADE
+
+{% for key, value in wireguard_peers.items() %}
+
+[Peer]
+# friendly_name = {{ value.friendly_name }}
+PublicKey = {{ value.PublicKey }}
+AllowedIPs = {{ value.Address }}
+{% endfor %}

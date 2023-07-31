@@ -1,0 +1,5 @@
+---
+- name: install
+  ansible.builtin.import_tasks: 01-install.yml
+- name: Generate keys
+  ansible.builtin.import_tasks: 02-configure.yml

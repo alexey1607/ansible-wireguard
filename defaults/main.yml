@@ -1,0 +1,9 @@
+---
+wireguard_config_dir: "/etc/wireguard"
+wireguard_config: "/etc/wireguard/wg0.conf"
+wireguard_network: "10.9.0.0/32"
+wireguard_address: "10.9.0.1/32"
+wireguard_port: 51820
+
+sysctl_config:
+  net.ipv4.ip_forward: 1

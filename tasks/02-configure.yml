@@ -1,0 +1,76 @@
+---
+- name: set private server key
+  ansible.builtin.stat:
+    path: "{{ wireguard_config_dir }}/server_private.key"
+  register: __server_private_key
+  tags: [configure]
+
+- name: set public server key
+  ansible.builtin.stat:
+    path: "{{ wireguard_config_dir }}/server_public.key"
+  register: __server_public_key
+  tags: [configure]
+
+- block:
+    - name: Generate WireGuard private and public keys
+      shell: |
+        set -o pipefail
+        umask 077 && wg genkey | tee {{ wireguard_config_dir }}/server_private.key | wg pubkey > {{ wireguard_config_dir }}/server_public.key
+      args:
+        executable: /bin/bash
+      changed_when: false
+  when:
+    - not __server_private_key.stat.exists
+    - not __server_public_key.stat.exists
+    - not ansible_check_mode
+  tags: [configure]
+
+- name: set private key
+  slurp:
+    src: "{{ wireguard_config_dir }}/server_private.key"
+  register: __wireguard_private_key
+  tags: [configure]
+
+- name: set pub key
+  slurp:
+    src: "{{ wireguard_config_dir }}/server_public.key"
+  register: __wireguard_public_key
+  tags: [configure]
+
+- name: Generate wg0.conf
+  ansible.builtin.template:
+    src: wg0.conf.j2
+    dest: "{{ wireguard_config }}"
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - restart wg-quick@wg0.service
+  tags: [configure]
+
+- name: Enable systemd unit wg-quick@wg0.service
+  systemd:
+    name: wg-quick@wg0.service
+    enabled: true
+    masked: false
+  tags: [configure]
+
+- name: Generate user config
+  ansible.builtin.template:
+    src: user.conf.j2
+    dest: "{{ wireguard_config_dir }}/user.conf"
+    owner: root
+    group: root
+    mode: 0644
+  tags: [configure]
+
+- name: Set public server key
+  ansible.builtin.slurp:
+    src: "{{ wireguard_config_dir }}/user.conf"
+  register: __user_conf
+  tags: [configure]
+
+- name: Show user config
+  ansible.builtin.debug:
+    msg: "{{ __user_conf.content | b64decode }}"
+  tags: [configure]

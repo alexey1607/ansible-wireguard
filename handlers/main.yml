@@ -1,0 +1,7 @@
+---
+- name: restart wg-quick@wg0.service
+  systemd:
+    daemon_reload: true
+    name: wg-quick@wg0.service
+    state: restarted
+    enabled: true

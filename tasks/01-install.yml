@@ -1,0 +1,23 @@
+---
+- name: update cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  tags: [install]
+
+- name: Install Wireguard
+  ansible.builtin.apt:
+    name: wireguard
+    state: present
+  tags: [install]
+
+- name: Change various sysctl-settings
+  ansible.builtin.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    sysctl_set: true
+    state: present
+    reload: true
+    ignoreerrors: true
+  with_dict: "{{ sysctl_config }}"
+  tags: [install]
